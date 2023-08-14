@@ -184,6 +184,28 @@ export function MovieDetails({
     fetchMovieDetails();
   }, [movieId]);
 
+  useEffect(() => {
+    if(!title) return;
+    document.title = `Movie | ${title}`;
+    return () => {
+      document.title = 'Rateflix';
+    }
+  },[title]);
+
+  useEffect(() => {
+    function callback(e) {
+      if(e.code === "Escape") {
+        onSelectImdbID(null);
+        console.log('Cleaning up...')
+      }
+    }
+    document.addEventListener("keydown", callback);
+
+    return () => {
+      document.removeEventListener("keydown", callback);
+    }
+  },[onSelectImdbID]);
+
   function handleAddToList() {
     const watchedMovie = {
       title,

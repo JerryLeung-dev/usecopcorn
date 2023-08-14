@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { NavBar, NumResults, Search } from "./Navigation";
 
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
 import Main, {
   Box,
@@ -69,22 +68,27 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("Future");
+  const [query, setQuery] = useState("");
   const [selectedimdbID, setSelectedimdbID] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
     fetchMovies();
 
     async function fetchMovies() {
       try {
+        setError("");
         if (query.length < 3) {
-          setError("");
           setMovies([]);
           return;
         }
         setLoading(true);
         const res = await fetch(
-          `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`
+          `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}&s=${query}`,
+          {
+            signal: signal,
+          }
         );
 
         // if(!res || !res.ok)
@@ -94,10 +98,16 @@ export default function App() {
 
         if (data.Response === "False") throw new Error("Movie not found");
         setMovies(data.Search);
+        // setError("");
       } catch (error) {
-        setError(error.message);
+        if(error.name !== 'AbortError'){
+          setError(error.message);
+        }
       } finally {
         setLoading(false);
+      }
+      return () => {
+        controller.abort();
       }
     }
   }, [query]);
@@ -142,7 +152,11 @@ export default function App() {
                 onClick={() => handleSelectedimdbID(null)}
                 className="btn-back"
               >
-                <FontAwesomeIcon icon={faChevronLeft} size="sm" style={{color: "#343a40"}} />
+                <FontAwesomeIcon
+                  icon={faChevronLeft}
+                  size="sm"
+                  style={{ color: "#343a40" }}
+                />
               </button>
               <MovieDetails
                 movieId={selectedimdbID}
