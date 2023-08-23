@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import StarRating from "./StarRating";
+import { useKey } from "./useKey";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -157,6 +158,9 @@ export function MovieDetails({
   const [movieDetails, setMovieDetails] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState(0);
+
+  const countRef = useRef(0);
+
   const {
     imdbRating,
     Title: title,
@@ -169,6 +173,12 @@ export function MovieDetails({
     Genre: genre,
     imdbID,
   } = movieDetails;
+
+  useKey("Escape", () => onSelectImdbID(null));
+
+  useEffect(() => {
+    if(userRating) countRef.current++;
+  }, [userRating]);
 
   useEffect(() => {
     async function fetchMovieDetails() {
@@ -192,20 +202,6 @@ export function MovieDetails({
     }
   },[title]);
 
-  useEffect(() => {
-    function callback(e) {
-      if(e.code === "Escape") {
-        onSelectImdbID(null);
-        console.log('Cleaning up...')
-      }
-    }
-    document.addEventListener("keydown", callback);
-
-    return () => {
-      document.removeEventListener("keydown", callback);
-    }
-  },[onSelectImdbID]);
-
   function handleAddToList() {
     const watchedMovie = {
       title,
@@ -213,6 +209,7 @@ export function MovieDetails({
       imdbRating,
       poster,
       userRating,
+      userRatingCount: countRef.current,
       imdbID,
     };
     onAddToList(watchedMovie);
